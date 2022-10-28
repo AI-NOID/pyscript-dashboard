@@ -7,31 +7,56 @@
 
         <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
         <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+        <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+
 
         <title>PyScript ♥ Altair</title>
         <py-env>
-- altair
 - pandas
 - matplotlib
-- vega_datasets
+- plotly
         </py-env>
     </head>
     <body>
-        <h1 style="font-size: 3em">Exploring IMDB Movies dataset with PyScript ♥</h1>
-        <div id="dashboard"></div>
+        <script type="text/javascript">
+            function plot (graph, chart) {
+                var figure = JSON.parse(graph)
+                Plotly.newPlot(chart, figure, {});
+            }
+        </script>
+        <h1 style="font-size: 3em">Exploring 32-replica 48x48 tile size FQ/AFQ Correlation</h1>
+        <div id="chart"></div>
+        <py-script>
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from pyodide.http import open_url
 
-        <py-script output="dashboard">
-import altair as alt
-from vega_datasets import data
+df = pd.read_json(open_url('./data/32x48x48.allCombined.maxStetps.shortrange.json'), orient='records')
+beta = np.stack(df.beta.to_numpy()).reshape(101,51)
+disorder = np.stack(df.disorder.to_numpy()).reshape(101,51)
+corrFQ = np.stack(df.corrFQ.to_numpy()).reshape(101,51)
+corrAFQ = np.stack(df.corrAFQ.to_numpy()).reshape(101,51)
 
-df = data.movies.url
+[beta.shape, disorder.shape, corrFQ.shape, corrAFQ.shape]
 
-rect = alt.Chart(df).mark_bar().encode(
-    alt.X('IMDB_Rating:Q'),
-    alt.Y('Rotten_Tomatoes_Rating:Q', bin=True)
-)
+fig = go.Figure(
+    data=[
+        go.Surface(x=df.beta.to_numpy().reshape(101,51), y=df.disorder.to_numpy().reshape(101,51), z=df.corrAFQ.to_numpy().reshape(101,51),
+            colorscale='Teal', colorbar=dict(x=-0.17, title='AFQ'), cmin=0, cmax=1),
+        go.Surface(x=df.beta.to_numpy().reshape(101,51), y=df.disorder.to_numpy().reshape(101,51), z=df.corrFQ.to_numpy().reshape(101,51), colorscale='Burg', opacity=0.8, colorbar=dict(x=-0.27, title='FQ'), cmin=0, cmax=1)])
+fig.update_layout(title = f"radius = 2.83 to 4.24", title_x=0.5, title_y=0.95, autosize=False, width=1024, height=800, scene=dict(xaxis_title='Beta        ', yaxis_title='Disorder   ', zaxis_title='Corr(r)      '), margin=dict(r=20, b=20, l=20, t=20))
 
-rect
+import js
+import json
+import plotly
+
+graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+js.plot(graphJSON,"chart")
+
+#fig.show()
         </py-script>
+        <py-repl></py-repl>
     </body>
 </html>

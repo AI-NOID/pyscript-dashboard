@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
+        <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+
+        <title>PyScript ♥ Altair</title>
+        <py-env>
+- altair
+- pandas
+- matplotlib
+- vega_datasets
+        </py-env>
+    </head>
+    <body>
+        <h1 style="font-size: 3em">Exploring IMDB Movies dataset with PyScript ♥</h1>
+        <div id="dashboard"></div>
+
+        <py-script output="dashboard">
+import altair as alt
+from vega_datasets import data
+
+df = data.movies.url
+
+rect = alt.Chart(df).mark_bar().encode(
+    alt.X('IMDB_Rating:Q'),
+    alt.Y('Rotten_Tomatoes_Rating:Q', bin=True)
+)
+
+rect
+        </py-script>
+    </body>
+</html>
